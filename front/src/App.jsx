@@ -13,13 +13,18 @@ const ALL_PERSONS = gql`
 
 const App = () => {
   // Here we use the useQuery hook to send the query to the server.
-  const result = useQuery(ALL_PERSONS);
+  // const result = useQuery(ALL_PERSONS);
+  const { loading, data, error } = useQuery(ALL_PERSONS);
 
-  if (result.loading) {
+  if (error) {
+    return <div>error...</div>;
+  }
+
+  if (loading) {
     return <div>loading...</div>;
   }
 
-  return <Persons persons={result.data.allPersons} />;
+  return <Persons persons={data.allPersons} />;
 };
 
 export default App;
