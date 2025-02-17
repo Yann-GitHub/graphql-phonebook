@@ -7,7 +7,7 @@ function Persons({ persons }) {
   const [nameToSearch, setNameToSearch] = useState(null);
   const result = useQuery(FIND_PERSON, {
     variables: { nameToSearch },
-    skip: !nameToSearch,
+    skip: !nameToSearch, // Skip the query if nameToSearch is null
   });
   if (nameToSearch && result.data) {
     return (
@@ -19,7 +19,7 @@ function Persons({ persons }) {
   }
   return (
     <div>
-      <h2>Persons</h2>
+      <h2>📔 Persons list</h2>
       {persons.map((p) => (
         <div key={p.name}>
           {p.name} {p.phone}
