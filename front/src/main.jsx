@@ -1,6 +1,7 @@
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { ALL_PERSONS } from "./queries";
+import "./index.css";
 
 import { ApolloClient, ApolloProvider, InMemoryCache } from "@apollo/client";
 

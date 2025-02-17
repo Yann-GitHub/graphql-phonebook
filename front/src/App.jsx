@@ -22,6 +22,7 @@ const App = () => {
     return <div>loading...</div>;
   }
 
+  // Simple error handling function that sets the error message and clears it after 10 seconds.s
   const notify = (message) => {
     setErrorMessage(message);
     setTimeout(() => {
