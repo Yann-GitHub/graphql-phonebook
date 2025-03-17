@@ -8,7 +8,7 @@ const Notify = ({ errorMessage }) => {
       setShow(true);
       const timer = setTimeout(() => {
         setShow(false);
-      }, 3000); // Hide after 3 seconds
+      }, 5000);
       return () => clearTimeout(timer);
     }
   }, [errorMessage]);

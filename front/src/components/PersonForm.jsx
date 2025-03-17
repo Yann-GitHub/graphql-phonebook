@@ -21,7 +21,15 @@ const PersonForm = ({ setError }) => {
   const submit = (event) => {
     event.preventDefault();
 
-    createPerson({ variables: { name, phone, street, city } });
+    // createPerson({ variables: { name, phone, street, city } });
+
+    // We can also use the following syntax to conditionally add the phone variable to the variables object.
+    const variables = { name, street, city };
+    if (phone) {
+      variables.phone = phone;
+    }
+
+    createPerson({ variables });
 
     setName("");
     setPhone("");
