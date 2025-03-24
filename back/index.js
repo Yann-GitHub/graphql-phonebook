@@ -113,18 +113,80 @@ const resolvers = {
   },
   Mutation: {
     addPerson: async (root, args) => {
+      // Check if all required fields are present
+      if (!args.name || !args.street || !args.city) {
+        throw new GraphQLError("Name, street, and city are required", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+            // invalidArgs: args,
+            invalidArgs: Object.keys(args).filter((key) => !args[key]),
+          },
+        });
+      }
+
+      // Check if the person already exists
+      const personExists = await Person.findOne({ name: args.name });
+      if (personExists) {
+        throw new GraphQLError("Name must be unique", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+            invalidArgs: args.name,
+          },
+        });
+      }
+
+      // Create a new person object
       const person = new Person({ ...args });
+
+      try {
+        await person.save();
+      } catch (error) {
+        throw new GraphQLError("Saving person failed", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+            invalidArgs: args.name,
+            error,
+          },
+        });
+      }
       return person.save();
     },
+
     editNumber: async (root, args) => {
+      // Search for the person by name
       const person = await Person.findOne({ name: args.name });
+
+      // Set error if person is not found
+      if (!person) {
+        throw new GraphQLError("Person not found", {
+          extensions: {
+            code: "NOT_FOUND",
+            invalidArgs: args.name,
+          },
+        });
+      }
+
+      // Update the phone number if the person is found
       person.phone = args.phone;
+
+      try {
+        // Save the updated person to the database
+        await person.save();
+      } catch (error) {
+        throw new GraphQLError("Saving number failed", {
+          extensions: {
+            code: "BAD_USER_INPUT",
+            invalidArgs: args.name,
+            error,
+          },
+        });
+      }
       return person.save();
     },
   },
 };
 
-// Used with mocking data
+// Used with mock data
 // const resolvers = {
 //   Query: {
 //     personCount: () => persons.length,

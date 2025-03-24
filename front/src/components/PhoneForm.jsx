@@ -7,7 +7,12 @@ const PhoneForm = ({ setError }) => {
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
 
-  const [changeNumber, result] = useMutation(EDIT_NUMBER); // changeNumber is the mutation function and result is the response from the server
+  const [changeNumber, result] = useMutation(EDIT_NUMBER, {
+    onError: (error) => {
+      const messages = error.graphQLErrors.map((e) => e.message).join("\n");
+      setError(messages);
+    },
+  });
 
   const submit = (event) => {
     event.preventDefault();
@@ -16,6 +21,14 @@ const PhoneForm = ({ setError }) => {
 
     setName("");
     setPhone("");
+
+    // If the mutation is successful, the result object will contain the data returned by the server.
+    // If the mutation fails, the result object will contain an error property.
+    // console.log("result", result);
+    // console.log("result.data", result.data);
+    // console.log("result.error", result.error);
+
+    // setError(`Number changed successfully for ${name} to ${phone}`);
   };
 
   useEffect(() => {
@@ -30,14 +43,14 @@ const PhoneForm = ({ setError }) => {
 
       <form onSubmit={submit}>
         <div>
-          name{" "}
+          name
           <input
             value={name}
             onChange={({ target }) => setName(target.value)}
           />
         </div>
         <div>
-          phone{" "}
+          phone
           <input
             value={phone}
             onChange={({ target }) => setPhone(target.value)}
