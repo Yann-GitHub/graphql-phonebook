@@ -11,7 +11,14 @@ const PersonForm = ({ setError }) => {
   // Here we use the useMutation hook to send the mutation to the server.
   // Cache is updated automatically.
   const [createPerson] = useMutation(CREATE_PERSON, {
-    refetchQueries: [{ query: ALL_PERSONS }],
+    // refetchQueries: [{ query: ALL_PERSONS }],
+
+    // This is a more efficient way to update the cache than refetching the query.
+    update: (cache, response) => {
+      cache.updateQuery({ query: ALL_PERSONS }, ({ allPersons }) => {
+        return { allPersons: allPersons.concat(response.data.addPerson) };
+      });
+    },
     onError: (error) => {
       const messages = error.graphQLErrors.map((e) => e.message).join("\n");
       setError(messages);
@@ -39,7 +46,7 @@ const PersonForm = ({ setError }) => {
 
   return (
     <div>
-      <h2>create new</h2>
+      <h2>Create new</h2>
       <form onSubmit={submit}>
         <div>
           name

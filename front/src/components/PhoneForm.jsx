@@ -39,7 +39,7 @@ const PhoneForm = ({ setError }) => {
 
   return (
     <div>
-      <h2>change number</h2>
+      <h2>Edit number</h2>
 
       <form onSubmit={submit}>
         <div>
