@@ -1,13 +1,15 @@
 const { GraphQLError } = require("graphql");
 const Person = require("../models/persons");
+const logger = require("../utils/logger");
 
 const personResolvers = {
   Query: {
-    personCount: async () => {
-      console.log("Query 'personCount' called");
+    personCount: async (root, args, context) => {
+      const { traceId, currentUser } = context;
+      logger.debug(`[${traceId}] Query 'personCount' called`);
 
       // Check if the user is authenticated
-      // if (!context.currentUser) {
+      // if (!currentUser) {
       //     throw new GraphQLError("Authentication required", {
       //         extensions: { code: "UNAUTHENTICATED" },
       //     });
@@ -18,8 +20,6 @@ const personResolvers = {
         const count = await Person.countDocuments();
         return count;
       } catch (error) {
-        console.error("Error fetching person count:", error);
-
         throw new GraphQLError("Failed to fetch person count", {
           extensions: { code: "INTERNAL_SERVER_ERROR" },
         });
@@ -27,10 +27,11 @@ const personResolvers = {
     },
 
     allPersons: async (root, args, context) => {
-      console.log("Query 'allPersons' called");
+      const { traceId, currentUser } = context;
+      logger.debug(`[${traceId}] Query 'allPersons' called`);
 
       // Check if the user is authenticated
-      // if (!context.currentUser) {
+      // if (!currentUser) {
       //     throw new GraphQLError("Authentication required", {
       //         extensions: { code: "UNAUTHENTICATED" },
       //     });
@@ -43,8 +44,6 @@ const personResolvers = {
 
         return await Person.find({ phone: { $exists: args.phone === "YES" } });
       } catch (error) {
-        console.error("Error fetching persons:", error);
-
         throw new GraphQLError("Failed to fetch persons", {
           extensions: { code: "INTERNAL_SERVER_ERROR" },
         });
@@ -52,10 +51,11 @@ const personResolvers = {
     },
 
     findPerson: async (root, args, context) => {
-      console.log("Query 'findPerson' called");
+      const { traceId, currentUser } = context;
+      logger.debug(`[${traceId}] Query 'findPerson' called`);
 
       // Check if the user is authenticated
-      // if (!context.currentUser) {
+      // if (!currentUser) {
       //     throw new GraphQLError("Authentication required", {
       //         extensions: { code: "UNAUTHENTICATED" },
       //     });
@@ -84,7 +84,7 @@ const personResolvers = {
         if (error instanceof GraphQLError) {
           throw error;
         }
-        console.error("Error fetching person:", error);
+
         throw new GraphQLError("Failed to fetch person", {
           extensions: { code: "INTERNAL_SERVER_ERROR" },
         });
@@ -102,8 +102,9 @@ const personResolvers = {
   },
 
   Mutation: {
-    addPerson: async (root, args, { currentUser }) => {
-      console.log("Mutation 'addPerson' called");
+    addPerson: async (root, args, context) => {
+      const { traceId, currentUser } = context;
+      logger.debug(`[${traceId}] Mutation 'addPerson' called`);
 
       // Check if the user is authenticated
       if (!currentUser) {
@@ -113,18 +114,43 @@ const personResolvers = {
       }
 
       // Check if all required fields are present and valid
-      const requiredFields = ["name", "street", "city"];
-      const missingFields = requiredFields.filter(
-        (field) => !args[field] || typeof args[field] !== "string"
-      );
+      if (
+        !args.name ||
+        typeof args.name !== "string" ||
+        args.name.trim() === ""
+      ) {
+        throw new GraphQLError(
+          "Invalid or missing 'name'. It must be a non-empty string.",
+          {
+            extensions: { code: "BAD_USER_INPUT", invalidArgs: "name" },
+          }
+        );
+      }
 
-      if (missingFields.length > 0) {
-        throw new GraphQLError("Missing or invalid required fields", {
-          extensions: {
-            code: "BAD_USER_INPUT",
-            invalidArgs: missingFields,
-          },
-        });
+      if (
+        !args.street ||
+        typeof args.street !== "string" ||
+        args.street.trim() === ""
+      ) {
+        throw new GraphQLError(
+          "Invalid or missing 'street'. It must be a non-empty string.",
+          {
+            extensions: { code: "BAD_USER_INPUT", invalidArgs: "street" },
+          }
+        );
+      }
+
+      if (
+        !args.city ||
+        typeof args.city !== "string" ||
+        args.city.trim() === ""
+      ) {
+        throw new GraphQLError(
+          "Invalid or missing 'city'. It must be a non-empty string.",
+          {
+            extensions: { code: "BAD_USER_INPUT", invalidArgs: "city" },
+          }
+        );
       }
 
       try {
@@ -157,7 +183,7 @@ const personResolvers = {
           throw error;
         }
 
-        // Handle Mongoose validation errors
+        // Handle Mongoose validation errors - transform them into GraphQLError
         if (error.name === "ValidationError") {
           throw new GraphQLError("Validation error", {
             extensions: {
@@ -168,7 +194,6 @@ const personResolvers = {
         }
 
         // Handle other errors
-        console.error("Error saving person:", error);
         throw new GraphQLError("Saving person failed", {
           extensions: {
             code: "INTERNAL_SERVER_ERROR",
@@ -178,9 +203,11 @@ const personResolvers = {
       }
     },
 
-    editNumber: async (root, args, { currentUser }) => {
-      console.log("Mutation 'editNumber' called");
+    editNumber: async (root, args, context) => {
+      const { traceId, currentUser } = context;
+      logger.debug(`[${traceId}] Mutation 'editNumber' called`);
 
+      // Check if the user is authenticated
       if (!currentUser) {
         throw new GraphQLError("Authentication required", {
           extensions: { code: "UNAUTHENTICATED" },
@@ -250,11 +277,9 @@ const personResolvers = {
         }
 
         // Handle other errors
-        console.error("Error saving number:", error);
         throw new GraphQLError("Saving number failed", {
           extensions: {
             code: "INTERNAL_SERVER_ERROR",
-            invalidArgs: args.name,
             error,
           },
         });

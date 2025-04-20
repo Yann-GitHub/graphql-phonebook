@@ -1,74 +1,64 @@
-const { ApolloServer } = require("@apollo/server");
 const { startStandaloneServer } = require("@apollo/server/standalone");
-const { GraphQLError } = require("graphql");
+const logger = require("./utils/logger");
+const { connectToDatabase } = require("./db");
+const { createApolloServer, createContext } = require("./server");
 
-const jwt = require("jsonwebtoken");
-
-const mongoose = require("mongoose");
-mongoose.set("strictQuery", false);
-
-const User = require("./models/users");
-
-const resolvers = require("./resolvers");
-const typeDefs = require("./typeDefs/index");
-
+// Load environment variables
 require("dotenv").config();
 
+// Config
 const MONGODB_URI = process.env.MONGODB_URI;
+const PORT = process.env.PORT || 4000;
 
-console.log("connecting to", MONGODB_URI);
+// Main function to start the application
+async function startApplication() {
+  try {
+    // 1. Connect to the database
+    logger.info("Initializing application...");
+    const dbConnected = await connectToDatabase(MONGODB_URI);
 
-mongoose
-  .connect(MONGODB_URI)
-  .then(() => {
-    console.log("📂 Connected to MongoDB");
-  })
-  .catch((error) => {
-    console.log("error connection to MongoDB:", error.message);
-  });
-
-const server = new ApolloServer({
-  typeDefs,
-  resolvers,
-});
-
-startStandaloneServer(server, {
-  listen: { port: 4000 },
-  context: async ({ req, res }) => {
-    // This function runs for every request
-    // Validate the JWT token and extract the user information
-    const auth = req ? req.headers.authorization : null;
-
-    if (auth && auth.startsWith("Bearer ")) {
-      try {
-        const decodedToken = jwt.verify(
-          auth.substring(7),
-          process.env.JWT_SECRET
-        );
-
-        const currentUser = await User.findById(decodedToken.id).populate(
-          "friends"
-        );
-
-        return { currentUser };
-      } catch (error) {
-        // Expired token error handling
-        if (error.name === "TokenExpiredError") {
-          console.error("Token has expired:", error.message);
-          throw new GraphQLError("Token has expired", {
-            extensions: { code: "UNAUTHENTICATED" },
-          });
-        }
-
-        // Invalid token error handling
-        console.error("Invalid token:", error.message);
-        throw new GraphQLError("Invalid token", {
-          extensions: { code: "UNAUTHENTICATED" },
-        });
-      }
+    if (!dbConnected) {
+      logger.error("Failed to connect to database. Application cannot start.");
+      process.exit(1);
     }
-    return { currentUser: null };
-  },
-}).then(({ url }) => {
-  console.log(`🚀 Server ready at ${url}`);
+
+    // 2. Create the Apollo Server instance
+    const server = createApolloServer();
+    logger.info("Apollo Server created successfully");
+
+    // 3. Start the server and listen on the specified port
+    const { url } = await startStandaloneServer(server, {
+      listen: { port: PORT },
+      context: createContext,
+    });
+
+    logger.info(`🚀 Server ready at ${url}`);
+  } catch (error) {
+    logger.error("Failed to start application", {
+      errorMessage: error.message,
+      stack: error.stack,
+    });
+    process.exit(1);
+  }
+}
+
+// Handle uncaught exceptions and unhandled rejections - prevent application from crashing !!
+process.on("uncaughtException", (error) => {
+  logger.error("UNCAUGHT EXCEPTION! 💥", {
+    errorName: error.name,
+    errorMessage: error.message,
+    stack: error.stack,
+  });
+  process.exit(1);
 });
+
+process.on("unhandledRejection", (error) => {
+  logger.error("UNHANDLED REJECTION! 💥", {
+    errorMessage: error.message,
+    stack: error.stack,
+  });
+  process.exit(1);
+});
+
+// 4. Start the application
+startApplication();

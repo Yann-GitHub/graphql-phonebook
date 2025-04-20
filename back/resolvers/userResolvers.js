@@ -3,15 +3,17 @@ const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 const User = require("../models/users");
 const Person = require("../models/persons");
+const logger = require("../utils/logger");
 
 const userResolvers = {
   Query: {
     me: (root, args, context) => {
-      console.log("Query 'me' called");
+      const { traceId, currentUser } = context;
+
+      logger.debug(`[${traceId}] 🔍 Query 'me' called`);
 
       // Check if the user is authenticated
-      if (!context.currentUser) {
-        console.log("Unauthenticated access attempt to 'me'");
+      if (!currentUser) {
         throw new GraphQLError("Authentication required", {
           extensions: { code: "UNAUTHENTICATED" },
         });
@@ -22,8 +24,12 @@ const userResolvers = {
   },
 
   Mutation: {
-    createUser: async (root, args) => {
-      console.log("Mutation 'createUser' called");
+    createUser: async (root, args, context) => {
+      const { traceId, currentUser } = context;
+
+      logger.debug(
+        `[${traceId}] 🔍 Creating user with Username ${args.username}`
+      );
 
       // Check if the username and password are provided and valid
       if (
@@ -93,8 +99,12 @@ const userResolvers = {
       }
     },
 
-    login: async (root, args) => {
-      console.log("Login mutation called");
+    login: async (root, args, context) => {
+      const { traceId, currentUser } = context;
+
+      logger.debug(
+        `[${traceId}] 🔍 Login mutation called with Username ${args.username}`
+      );
 
       // Check if the username and password are provided and valid
       if (!args.username || typeof args.username !== "string") {
@@ -120,7 +130,6 @@ const userResolvers = {
 
         // Check if the user exists
         if (!user) {
-          console.log(`Failed login attempt for username: ${args.username}`);
           throw new GraphQLError("Invalid username or password", {
             extensions: {
               code: "BAD_USER_INPUT",
@@ -135,7 +144,6 @@ const userResolvers = {
         );
 
         if (!isPasswordValid) {
-          console.log(`Failed login attempt for username: ${args.username}`);
           throw new GraphQLError("Invalid username or password", {
             extensions: {
               code: "BAD_USER_INPUT",
@@ -150,7 +158,7 @@ const userResolvers = {
 
         return {
           token: jwt.sign(userForToken, process.env.JWT_SECRET, {
-            expiresIn: "1m",
+            expiresIn: "10m",
           }),
         };
       } catch (error) {
@@ -161,7 +169,6 @@ const userResolvers = {
 
         // If error is from JWT verification
         if (error.name === "JsonWebTokenError") {
-          console.error("JWT error:", error.message);
           throw new GraphQLError("Authentication system error", {
             extensions: {
               code: "INTERNAL_SERVER_ERROR",
@@ -172,7 +179,6 @@ const userResolvers = {
         }
 
         // Handle other errors
-        console.error("Login error:", error);
         throw new GraphQLError("Login failed due to a technical error", {
           extensions: {
             code: "INTERNAL_SERVER_ERROR",
@@ -181,8 +187,12 @@ const userResolvers = {
       }
     },
 
-    addAsFriend: async (root, args, { currentUser }) => {
-      console.log("Mutation 'addAsFriend' called");
+    addAsFriend: async (root, args, context) => {
+      const { traceId, currentUser } = context;
+
+      logger.debug(
+        `[${traceId}] 🔍 Mutation 'addAsFriend' called with Username ${args.username}`
+      );
 
       // Check if the user is authenticated
       if (!currentUser) {
@@ -233,7 +243,6 @@ const userResolvers = {
 
         // Handle Mongoose validation errors
         if (error.name === "ValidationError") {
-          console.error("Validation error:", error);
           throw new GraphQLError("Validation error", {
             extensions: {
               code: "BAD_USER_INPUT",
@@ -243,7 +252,6 @@ const userResolvers = {
         }
 
         // Handle other errors
-        console.error("Error adding friend:", error);
         throw new GraphQLError("Failed to add friend", {
           extensions: {
             code: "INTERNAL_SERVER_ERROR",

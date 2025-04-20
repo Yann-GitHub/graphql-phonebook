@@ -33,6 +33,10 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
     );
     if (authError) {
       console.log("Token expired, logging out...");
+      localStorage.setItem(
+        "auth-message",
+        "Votre session a expiré. Veuillez vous reconnecter."
+      );
       localStorage.removeItem("phonenumbers-user-token");
       window.location.reload(); // solution before global state management :(
     }
