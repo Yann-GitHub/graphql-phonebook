@@ -11,10 +11,9 @@ import {
 import { setContext } from "@apollo/client/link/context";
 import { onError } from "@apollo/client/link/error";
 
-import { useAuthStore } from "./store/index.js";
+import { useAuthStore, useNotificationStore } from "./store/index.js";
 
 const authLink = setContext((_, { headers }) => {
-  // const token = localStorage.getItem("phonenumbers-user-token");
   const token = useAuthStore.getState().token;
 
   return {
@@ -44,20 +43,20 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
         console.log("Token expired or invalid, logging out...");
 
         useAuthStore.getState().logout();
-        // useNotificationStore.getState().addNotification({
-        //   type: "error",
-        //   message: "Your session has expired. Please log in again.",
-        // });
+        useNotificationStore.getState().addNotification({
+          type: "error",
+          message: "Your session has expired. Please log in again.",
+        });
 
         // Redirection optionnelle
       } else {
         // Token is not present
         console.log("Authentication required for this operation");
 
-        // useNotificationStore.getState().addNotification({
-        //   type: "error",
-        //   message: "Please log in to access this resource.",
-        // });
+        useNotificationStore.getState().addNotification({
+          type: "error",
+          message: "Please log in to access this resource.",
+        });
 
         // Redirection optionnelle !!
       }

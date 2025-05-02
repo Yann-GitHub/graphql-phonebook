@@ -3,6 +3,7 @@ import { useQuery } from "@apollo/client";
 import Person from "./Person";
 import { FIND_PERSON, ALL_PERSONS } from "../queries";
 import Loader from "./Loader";
+// import { useNotificationStore } from "../store/index.js";
 
 function Persons() {
   const [nameToSearch, setNameToSearch] = useState(null);
@@ -24,6 +25,7 @@ function Persons() {
   });
 
   if (errorAllPersons) {
+    console.error("Error fetching persons:", errorAllPersons);
     return (
       <div className="error-container">
         <h3>😕 Error fetching persons</h3>

@@ -1,7 +1,11 @@
 import { useState } from "react";
 import { useMutation, useLazyQuery } from "@apollo/client";
 import { LOGIN, ME } from "../queries";
-import { useAuthStore, useUserStore } from "../store/index.js";
+import {
+  useAuthStore,
+  useUserStore,
+  useNotificationStore,
+} from "../store/index.js";
 import { useNavigate } from "react-router-dom";
 import Loader from "./Loader.jsx";
 
@@ -9,6 +13,9 @@ const LoginForm = () => {
   // Zustand stores
   const setToken = useAuthStore((state) => state.setToken);
   const setUser = useUserStore((state) => state.setUser);
+  const addNotification = useNotificationStore(
+    (state) => state.addNotification
+  );
 
   // Form control with local state
   const [username, setUsername] = useState("");
@@ -36,10 +43,10 @@ const LoginForm = () => {
     },
     onError: (error) => {
       console.error("Error fetching user data:", error);
-      // addNotification({
-      //   type: "error",
-      //   message: "Impossible de récupérer vos informations utilisateur",
-      // });
+      addNotification({
+        type: "error",
+        message: "Impossible de récupérer vos informations utilisateur",
+      });
       setFetchingUser(false); // Stop loader even on error
     },
     fetchPolicy: "network-only", // Force fresh fetch after login
@@ -56,11 +63,11 @@ const LoginForm = () => {
     },
     onError: (error) => {
       console.error("Login error:", error);
-      // addNotification({
-      //   type: "error",
-      //   message:
-      //     error.graphQLErrors[0]?.message || "Erreur lors de la connexion",
-      // });
+      addNotification({
+        type: "error",
+        message:
+          error.graphQLErrors[0]?.message || "Erreur lors de la connexion",
+      });
     },
   });
 
