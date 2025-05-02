@@ -25,8 +25,9 @@ function Persons() {
 
   if (errorAllPersons) {
     return (
-      <div className="error-message">
-        Error loading contacts: {errorAllPersons.message}
+      <div className="error-container">
+        <h3>😕 Error fetching persons</h3>
+        <p>{errorAllPersons.message}</p>
       </div>
     );
   }

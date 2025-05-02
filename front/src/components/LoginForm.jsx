@@ -1,42 +1,122 @@
-import { useState, useEffect } from "react";
-import { useMutation } from "@apollo/client";
-import { LOGIN } from "../queries";
+import { useState } from "react";
+import { useMutation, useLazyQuery } from "@apollo/client";
+import { LOGIN, ME } from "../queries";
+import { useAuthStore, useUserStore } from "../store/index.js";
+import { useNavigate } from "react-router-dom";
+import Loader from "./Loader.jsx";
 
-const LoginForm = ({ setError, setToken }) => {
+const LoginForm = () => {
+  // Zustand stores
+  const setToken = useAuthStore((state) => state.setToken);
+  const setUser = useUserStore((state) => state.setUser);
+
   // Form control with local state
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
-  const [login, result] = useMutation(LOGIN, {
+  // Local loading state for fetching user - Resolving the issue with the ME query
+  const [fetchingUser, setFetchingUser] = useState(false);
+
+  // React Router
+  const navigate = useNavigate();
+
+  // Lazy query to get current user
+  const [getMe] = useLazyQuery(ME, {
+    onCompleted: (data) => {
+      console.log("getMe onCompleted with:", data);
+      setUser({
+        id: data.me.id,
+        username: data.me.username,
+        favoriteGenre: data.me.favoriteGenre,
+        profilePicture:
+          data.me.profilePicture || "https://thispersondoesnotexist.com/",
+      });
+      setFetchingUser(false); // Stop loader
+      navigate("/"); // Now safe to navigate
+    },
     onError: (error) => {
-      setError(error.graphQLErrors[0].message);
+      console.error("Error fetching user data:", error);
+      // addNotification({
+      //   type: "error",
+      //   message: "Impossible de récupérer vos informations utilisateur",
+      // });
+      setFetchingUser(false); // Stop loader even on error
+    },
+    fetchPolicy: "network-only", // Force fresh fetch after login
+  });
+
+  // Mutation to login
+  const [login, { loading }] = useMutation(LOGIN, {
+    onCompleted: (data) => {
+      console.log("Login successful, token received:", data.login.token);
+      const token = data.login.token;
+      setToken(token);
+      setFetchingUser(true); // Start loader for getMe
+      getMe();
+    },
+    onError: (error) => {
+      console.error("Login error:", error);
+      // addNotification({
+      //   type: "error",
+      //   message:
+      //     error.graphQLErrors[0]?.message || "Erreur lors de la connexion",
+      // });
     },
   });
 
-  useEffect(() => {
-    if (result.data) {
-      const token = result.data.login.token;
-      setToken(token);
-      localStorage.setItem("phonenumbers-user-token", token);
-    }
-  }, [result.data, setToken]);
-
-  const submit = async (event) => {
+  const submit = (event) => {
     event.preventDefault();
-
     login({ variables: { username, password } });
     setUsername("");
     setPassword("");
   };
 
+  // Render loading state if fetching user after login
+  if (fetchingUser) {
+    return <Loader />;
+  }
+
+  // return (
+  //   <div className="form-container">
+  //     <form onSubmit={submit} className="custom-form">
+  //       {/* <h2 className="form-title">Login form</h2> */}
+  //       <div className="form-main-wrap">
+  //         <div className="form-group-wrap">
+  //           <label htmlFor="">username</label>
+  //           <input
+  //             value={username}
+  //             type="text"
+  //             placeholder="Example: johndoe"
+  //             onChange={({ target }) => setUsername(target.value)}
+  //           />
+  //         </div>
+  //         <div className="form-group-wrap">
+  //           <label htmlFor="">password</label>
+  //           <input
+  //             type="password"
+  //             value={password}
+  //             placeholder="Example: ********"
+  //             onChange={({ target }) => setPassword(target.value)}
+  //           />
+  //         </div>
+  //       </div>
+  //       <button type="submit">login</button>
+  //     </form>
+  //   </div>
+  // );
   return (
     <div className="form-container">
-      <form onSubmit={submit} className="custom-form">
-        {/* <h2 className="form-title">Login form</h2> */}
+      <form
+        onSubmit={submit}
+        className="custom-form"
+        style={{ marginTop: "-93.5px" }}
+      >
+        <h2 className="form-title">Login form</h2>
         <div className="form-main-wrap">
           <div className="form-group-wrap">
-            <label htmlFor="">username</label>
+            <label htmlFor="username-input">Username</label>
             <input
+              id="username-input"
               value={username}
               type="text"
               placeholder="Example: johndoe"
@@ -44,8 +124,9 @@ const LoginForm = ({ setError, setToken }) => {
             />
           </div>
           <div className="form-group-wrap">
-            <label htmlFor="">password</label>
+            <label htmlFor="password-input">Password</label>
             <input
+              id="password-input"
               type="password"
               value={password}
               placeholder="Example: ********"
@@ -53,7 +134,9 @@ const LoginForm = ({ setError, setToken }) => {
             />
           </div>
         </div>
-        <button type="submit">login</button>
+        <button type="submit" disabled={loading}>
+          {loading ? "Connexion..." : "Login"}
+        </button>
       </form>
     </div>
   );

@@ -1,7 +1,19 @@
-import { Link, NavLink } from "react-router-dom";
+import { Link, NavLink, useNavigate } from "react-router-dom";
 import UserIcon from "../components/icons/UserIcon.jsx";
+import UserIconOutLine from "./icons/UserIconOutLine.jsx";
+import { useAuthStore, useUserStore } from "../store/index.js";
 
 const Header = () => {
+  const token = useAuthStore((state) => state.token);
+  const logout = useAuthStore((state) => state.logout);
+  const user = useUserStore((state) => state.user);
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
   return (
     <header className="header">
       <nav className="">
@@ -24,13 +36,34 @@ const Header = () => {
           </li>
         </ul>
       </nav>
-
-      <div className="user-icon-container">
-        <UserIcon className="user-icon" />
-        <Link to="/login" className="login-button">
-          Login
-        </Link>
-      </div>
+      {token ? (
+        <div className="user-icon-container">
+          {user?.profilePicture ? (
+            <img
+              src={user.profilePicture}
+              alt={user.username}
+              className="profile-picture"
+            />
+          ) : (
+            <UserIconOutLine className="user-icon" />
+          )}
+          <span className="username">
+            {user?.username
+              ? user.username.charAt(0).toUpperCase() + user.username.slice(1)
+              : "User"}
+          </span>
+          <button onClick={handleLogout} className="logout-button">
+            Logout
+          </button>
+        </div>
+      ) : (
+        <div className="user-icon-container">
+          <UserIcon className="user-icon" />
+          <Link to="/login" className="login-button">
+            Login
+          </Link>
+        </div>
+      )}
     </header>
   );
 };

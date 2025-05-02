@@ -319,7 +319,7 @@ a.login-button {
 .login-page {
   display: flex;
   flex-direction: column;
-  justify-content: start;
+  justify-content: center;
   align-items: center;
   position: relative;
   flex-grow: 1;

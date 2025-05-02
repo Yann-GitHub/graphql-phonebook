@@ -10,10 +10,13 @@ import {
 } from "@apollo/client";
 import { setContext } from "@apollo/client/link/context";
 import { onError } from "@apollo/client/link/error";
-// import { ALL_PERSONS } from "./queries";
+
+import { useAuthStore } from "./store/index.js";
 
 const authLink = setContext((_, { headers }) => {
-  const token = localStorage.getItem("phonenumbers-user-token");
+  // const token = localStorage.getItem("phonenumbers-user-token");
+  const token = useAuthStore.getState().token;
+
   return {
     headers: {
       ...headers,
@@ -31,14 +34,33 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
     const authError = graphQLErrors.find(
       ({ extensions }) => extensions.code === "UNAUTHENTICATED"
     );
+
     if (authError) {
-      console.log("Token expired, logging out...");
-      localStorage.setItem(
-        "auth-message",
-        "Votre session a expiré. Veuillez vous reconnecter."
-      );
-      localStorage.removeItem("phonenumbers-user-token");
-      window.location.reload(); // solution before global state management :(
+      // Get the token from the Zustand store
+      const token = useAuthStore.getState().token;
+
+      if (token) {
+        // Check if the token is expired or invalid
+        console.log("Token expired or invalid, logging out...");
+
+        useAuthStore.getState().logout();
+        // useNotificationStore.getState().addNotification({
+        //   type: "error",
+        //   message: "Your session has expired. Please log in again.",
+        // });
+
+        // Redirection optionnelle
+      } else {
+        // Token is not present
+        console.log("Authentication required for this operation");
+
+        // useNotificationStore.getState().addNotification({
+        //   type: "error",
+        //   message: "Please log in to access this resource.",
+        // });
+
+        // Redirection optionnelle !!
+      }
     }
   }
   // Log all GraphQL errors
@@ -54,9 +76,10 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
   }
 });
 
-const client = new ApolloClient({
+export const client = new ApolloClient({
   cache: new InMemoryCache(),
   link: from([errorLink, authLink, httpLink]),
+  connectToDevTools: true,
 
   // uri: "http://localhost:4000",
   // link: createHttpLink({
