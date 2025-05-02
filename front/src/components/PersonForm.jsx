@@ -46,35 +46,45 @@ const PersonForm = ({ setError }) => {
 
   return (
     <div>
-      <h2>Create new</h2>
-      <form onSubmit={submit}>
-        <div>
-          name
-          <input
-            value={name}
-            onChange={({ target }) => setName(target.value)}
-          />
-        </div>
-        <div>
-          phone
-          <input
-            value={phone}
-            onChange={({ target }) => setPhone(target.value)}
-          />
-        </div>
-        <div>
-          street
-          <input
-            value={street}
-            onChange={({ target }) => setStreet(target.value)}
-          />
-        </div>
-        <div>
-          city
-          <input
-            value={city}
-            onChange={({ target }) => setCity(target.value)}
-          />
+      <form onSubmit={submit} className="custom-form larger">
+        {/* <h2 className="form-title">Add new person</h2> */}
+        <div className="form-main-wrap">
+          <div className="form-group-wrap">
+            <label htmlFor="">name</label>
+            <input
+              value={name}
+              type="text"
+              placeholder="Example: John Doe"
+              onChange={({ target }) => setName(target.value)}
+            />
+          </div>
+          <div className="form-group-wrap">
+            <label htmlFor="">phone</label>
+            <input
+              type="text"
+              value={phone}
+              placeholder="Example: 123-456-7890"
+              onChange={({ target }) => setPhone(target.value)}
+            />
+          </div>
+          <div className="form-group-wrap">
+            <label htmlFor="">street</label>
+            <input
+              type="text"
+              value={street}
+              placeholder="Example: 123 Main St"
+              onChange={({ target }) => setStreet(target.value)}
+            />
+          </div>
+          <div className="form-group-wrap">
+            <label htmlFor="">city</label>
+            <input
+              type="text"
+              value={city}
+              placeholder="Example: New York"
+              onChange={({ target }) => setCity(target.value)}
+            />
+          </div>
         </div>
         <button type="submit">add</button>
       </form>

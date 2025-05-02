@@ -3,6 +3,7 @@ import { useMutation } from "@apollo/client";
 import { LOGIN } from "../queries";
 
 const LoginForm = ({ setError, setToken }) => {
+  // Form control with local state
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
 
@@ -29,22 +30,28 @@ const LoginForm = ({ setError, setToken }) => {
   };
 
   return (
-    <div>
-      <form onSubmit={submit}>
-        <div>
-          username{" "}
-          <input
-            value={username}
-            onChange={({ target }) => setUsername(target.value)}
-          />
-        </div>
-        <div>
-          password{" "}
-          <input
-            type="password"
-            value={password}
-            onChange={({ target }) => setPassword(target.value)}
-          />
+    <div className="form-container">
+      <form onSubmit={submit} className="custom-form">
+        {/* <h2 className="form-title">Login form</h2> */}
+        <div className="form-main-wrap">
+          <div className="form-group-wrap">
+            <label htmlFor="">username</label>
+            <input
+              value={username}
+              type="text"
+              placeholder="Example: johndoe"
+              onChange={({ target }) => setUsername(target.value)}
+            />
+          </div>
+          <div className="form-group-wrap">
+            <label htmlFor="">password</label>
+            <input
+              type="password"
+              value={password}
+              placeholder="Example: ********"
+              onChange={({ target }) => setPassword(target.value)}
+            />
+          </div>
         </div>
         <button type="submit">login</button>
       </form>

@@ -1,34 +1,122 @@
 import { useState } from "react";
 import { useQuery } from "@apollo/client";
 import Person from "./Person";
-import { FIND_PERSON } from "../queries";
+import { FIND_PERSON, ALL_PERSONS } from "../queries";
+import Loader from "./Loader";
 
-function Persons({ persons }) {
+function Persons() {
   const [nameToSearch, setNameToSearch] = useState(null);
-  const result = useQuery(FIND_PERSON, {
+  const [searchQuery, setSearchQuery] = useState("");
+
+  const {
+    loading: loadingAllPersons,
+    error: errorAllPersons,
+    data: allPersons,
+  } = useQuery(ALL_PERSONS);
+
+  const {
+    loading: loadingPerson,
+    // error: errorPerson,
+    data: person,
+  } = useQuery(FIND_PERSON, {
     variables: { nameToSearch },
     skip: !nameToSearch, // Skip the query if nameToSearch is null
   });
-  if (nameToSearch && result.data) {
+
+  if (errorAllPersons) {
     return (
-      <Person
-        person={result.data.findPerson}
-        onClose={() => setNameToSearch(null)}
-      />
+      <div className="error-message">
+        Error loading contacts: {errorAllPersons.message}
+      </div>
     );
   }
-  return (
-    <div>
-      <h2>📔 Persons list</h2>
-      {persons.map((p) => (
-        <div key={p.name}>
-          {p.name} {p.phone}
-          <button onClick={() => setNameToSearch(p.name)}>
-            {" "}
-            show address{" "}
-          </button>{" "}
+
+  if (loadingAllPersons) {
+    return <Loader />;
+  }
+
+  const personsList = allPersons?.allPersons || [];
+
+  // Filtrer la liste basée sur la recherche
+  const filteredList = searchQuery
+    ? personsList.filter(
+        (p) =>
+          p.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (p.phone && p.phone.includes(searchQuery))
+      )
+    : personsList;
+
+  if (nameToSearch) {
+    if (loadingPerson) {
+      return <Loader />;
+    }
+
+    if (person && person.findPerson) {
+      return (
+        <Person
+          person={person.findPerson}
+          onClose={() => setNameToSearch(null)}
+        />
+      );
+    }
+
+    return (
+      <div className="not-found-container">
+        <div className="not-found-content">
+          <h3>😕 Person not found</h3>
+          <p>
+            `We could not find anyone named ${nameToSearch} in the phonebook.`
+          </p>
+          <button onClick={() => setNameToSearch(null)}>
+            Back to contacts
+          </button>
         </div>
-      ))}
+      </div>
+    );
+  }
+
+  return (
+    <div className="persons-page">
+      <div className="search-container">
+        <input
+          type="text"
+          placeholder="Search by name or phone..."
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          className="search-input"
+        />
+        {searchQuery && (
+          <button className="clear-search" onClick={() => setSearchQuery("")}>
+            ✕
+          </button>
+        )}
+      </div>
+
+      {filteredList.length === 0 ? (
+        <div className="no-results">
+          <p>`No contacts found matching ${searchQuery}`</p>
+        </div>
+      ) : (
+        <div className="persons-grid">
+          {filteredList.map((p) => (
+            <div key={p.id || p.name} className="person-card">
+              <div className="person-avatar">
+                {p.name.charAt(0).toUpperCase()}
+              </div>
+              <div className="person-info">
+                <h3>{p.name}</h3>
+                <p className="phone-number">{p.phone || "No phone number"}</p>
+              </div>
+              <button
+                className="details-button"
+                onClick={() => setNameToSearch(p.name)}
+              >
+                Details
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
