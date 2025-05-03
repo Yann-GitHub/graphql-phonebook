@@ -1,7 +1,43 @@
 import { useEffect, useState } from "react";
+import { useMutation } from "@apollo/client";
+import { ADD_FRIEND, ME, ALL_PERSONS } from "../queries";
+import { useNotificationStore } from "../store/index.js";
+import { useUserStore } from "../store/index.js";
 
-const Person = ({ person, onClose }) => {
+const Person = ({ person, onClose, isFriend }) => {
   const [animateIn, setAnimateIn] = useState(false);
+  const [isFriendState, setIsFriendState] = useState(isFriend);
+
+  const user = useUserStore((state) => state.user);
+  const setUser = useUserStore((state) => state.setUser);
+  const addNotification = useNotificationStore(
+    (state) => state.addNotification
+  );
+
+  // Mutation to add a friend
+  const [addFriend, { loading: addingFriend }] = useMutation(ADD_FRIEND, {
+    variables: { id: person.id },
+    refetchQueries: [{ query: ME }, { query: ALL_PERSONS }],
+    onCompleted: () => {
+      setIsFriendState(true);
+      const updatedUser = {
+        ...user,
+        friends: [...(user.friends || []), person],
+      };
+      setUser(updatedUser);
+      addNotification({
+        type: "success",
+        message: `${person.name} added to your friends!`,
+      });
+    },
+    onError: (error) => {
+      console.error("Error adding friend:", error);
+      addNotification({
+        type: "error",
+        message: error.graphQLErrors[0]?.message || "Could not add friend",
+      });
+    },
+  });
 
   // Entry animation
   useEffect(() => {
@@ -9,6 +45,11 @@ const Person = ({ person, onClose }) => {
     const timer = setTimeout(() => setAnimateIn(true), 50);
     return () => clearTimeout(timer);
   }, []);
+
+  // Update friend state when props change
+  useEffect(() => {
+    setIsFriendState(isFriend);
+  }, [isFriend, person]);
 
   // Exit animation
   const handleClose = () => {
@@ -66,9 +107,9 @@ const Person = ({ person, onClose }) => {
           </div>
 
           <div className="detail-item">
-            <span className="detail-icon">🆔</span>
-            <span className="detail-label">ID:</span>
-            <span className="detail-value id">{person.id}</span>
+            <span className="detail-icon">👫</span>
+            <span className="detail-label">Is friend:</span>
+            <span className="detail-value">{isFriendState ? "Yes" : "No"}</span>
           </div>
         </div>
 
@@ -79,6 +120,15 @@ const Person = ({ person, onClose }) => {
           >
             📞 Call
           </button>
+          {!isFriendState && (
+            <button
+              className="action-button add-friend-button"
+              onClick={addFriend}
+              disabled={addingFriend}
+            >
+              {addingFriend ? "Adding..." : "➕ Add friend"}
+            </button>
+          )}
           <button className="action-button edit-button">✏️ Edit</button>
           <button className="action-button close-button" onClick={handleClose}>
             Close

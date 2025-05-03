@@ -34,7 +34,7 @@ const LoginForm = () => {
       setUser({
         id: data.me.id,
         username: data.me.username,
-        favoriteGenre: data.me.favoriteGenre,
+        friends: data.me.friends,
         profilePicture:
           data.me.profilePicture || "https://thispersondoesnotexist.com/",
       });

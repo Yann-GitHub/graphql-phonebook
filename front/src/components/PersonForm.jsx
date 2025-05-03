@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@apollo/client";
-import { ALL_PERSONS, CREATE_PERSON } from "../queries";
-import { useNotificationStore } from "../store/index.js";
+import { ALL_PERSONS, CREATE_PERSON, ME } from "../queries";
+import { useNotificationStore, useUserStore } from "../store/index.js";
 
 const PersonForm = ({ setError }) => {
   const [name, setName] = useState("");
@@ -9,13 +9,15 @@ const PersonForm = ({ setError }) => {
   const [street, setStreet] = useState("");
   const [city, setCity] = useState("");
 
+  const user = useUserStore((state) => state.user);
+  const setUser = useUserStore((state) => state.setUser);
   const addNotification = useNotificationStore(
     (state) => state.addNotification
   );
 
   //
-  const [createPerson] = useMutation(CREATE_PERSON, {
-    refetchQueries: [{ query: ALL_PERSONS }],
+  const [createPerson, { loading }] = useMutation(CREATE_PERSON, {
+    refetchQueries: [{ query: ALL_PERSONS }, { query: ME }],
 
     // This is a more efficient way to update the cache than refetching the query.
     // update: (cache, response) => {
@@ -24,7 +26,14 @@ const PersonForm = ({ setError }) => {
     //   });
     // },
 
-    onCompleted: () => {
+    onCompleted: (data) => {
+      // console.log("Person created successfully:", data);
+      // Update the user state with the new person
+      const updatedUser = {
+        ...user,
+        friends: [...(user.friends || []), data.addPerson],
+      };
+      setUser(updatedUser);
       addNotification({
         type: "success",
         message: `Person added successfully`,
@@ -104,7 +113,10 @@ const PersonForm = ({ setError }) => {
             />
           </div>
         </div>
-        <button type="submit">Add</button>
+        <button type="submit" disabled={loading}>
+          {" "}
+          {loading ? "Adding..." : "Add"}
+        </button>
       </form>
     </div>
   );

@@ -70,6 +70,10 @@ export const ME = gql`
     me {
       username
       id
+      friends {
+        id
+        name
+      }
     }
   }
 `;
@@ -79,6 +83,19 @@ export const CREATE_USER = gql`
     createUser(username: $username, password: $password) {
       id
       username
+    }
+  }
+`;
+
+export const ADD_FRIEND = gql`
+  mutation addAsFriend($id: ID!) {
+    addAsFriend(id: $id) {
+      id
+      username
+      friends {
+        id
+        name
+      }
     }
   }
 `;

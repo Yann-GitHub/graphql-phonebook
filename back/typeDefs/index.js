@@ -58,7 +58,7 @@ const typeDefs = `
     ): Token
 
     addAsFriend(
-    name: String!
+      id: ID!
     ): User
   }
 `;
