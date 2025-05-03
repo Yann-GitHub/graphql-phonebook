@@ -31,11 +31,11 @@ const personResolvers = {
       logger.debug(`[${traceId}] Query 'allPersons' called`);
 
       // Check if the user is authenticated
-      if (!currentUser) {
-        throw new GraphQLError("Authentication required", {
-          extensions: { code: "UNAUTHENTICATED" },
-        });
-      }
+      // if (!currentUser) {
+      //   throw new GraphQLError("Authentication required", {
+      //     extensions: { code: "UNAUTHENTICATED" },
+      //   });
+      // }
 
       try {
         if (!args.phone) {

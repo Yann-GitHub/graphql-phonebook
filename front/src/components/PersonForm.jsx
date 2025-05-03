@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useMutation } from "@apollo/client";
 import { ALL_PERSONS, CREATE_PERSON } from "../queries";
+import { useNotificationStore } from "../store/index.js";
 
 const PersonForm = ({ setError }) => {
   const [name, setName] = useState("");
@@ -8,15 +9,25 @@ const PersonForm = ({ setError }) => {
   const [street, setStreet] = useState("");
   const [city, setCity] = useState("");
 
-  // Here we use the useMutation hook to send the mutation to the server.
-  // Cache is updated automatically.
+  const addNotification = useNotificationStore(
+    (state) => state.addNotification
+  );
+
+  //
   const [createPerson] = useMutation(CREATE_PERSON, {
-    // refetchQueries: [{ query: ALL_PERSONS }],
+    refetchQueries: [{ query: ALL_PERSONS }],
 
     // This is a more efficient way to update the cache than refetching the query.
-    update: (cache, response) => {
-      cache.updateQuery({ query: ALL_PERSONS }, ({ allPersons }) => {
-        return { allPersons: allPersons.concat(response.data.addPerson) };
+    // update: (cache, response) => {
+    //   cache.updateQuery({ query: ALL_PERSONS }, ({ allPersons }) => {
+    //     return { allPersons: allPersons.concat(response.data.addPerson) };
+    //   });
+    // },
+
+    onCompleted: () => {
+      addNotification({
+        type: "success",
+        message: `Person added successfully`,
       });
     },
     onError: (error) => {
@@ -28,7 +39,14 @@ const PersonForm = ({ setError }) => {
   const submit = (event) => {
     event.preventDefault();
 
-    // createPerson({ variables: { name, phone, street, city } });
+    //Validation
+    if (!name || !street || !city) {
+      addNotification({
+        type: "error",
+        message: "Name, street, and city are required fields.",
+      });
+      return;
+    }
 
     // We can also use the following syntax to conditionally add the phone variable to the variables object.
     const variables = { name, street, city };
@@ -50,43 +68,43 @@ const PersonForm = ({ setError }) => {
         {/* <h2 className="form-title">Add new person</h2> */}
         <div className="form-main-wrap">
           <div className="form-group-wrap">
-            <label htmlFor="">name</label>
+            <label htmlFor="name">name</label>
             <input
+              id="name"
               value={name}
-              type="text"
               placeholder="Example: John Doe"
               onChange={({ target }) => setName(target.value)}
             />
           </div>
           <div className="form-group-wrap">
-            <label htmlFor="">phone</label>
+            <label htmlFor="phone">phone</label>
             <input
-              type="text"
+              id="phone"
               value={phone}
               placeholder="Example: 123-456-7890"
               onChange={({ target }) => setPhone(target.value)}
             />
           </div>
           <div className="form-group-wrap">
-            <label htmlFor="">street</label>
+            <label htmlFor="street">street</label>
             <input
-              type="text"
+              id="street"
               value={street}
               placeholder="Example: 123 Main St"
               onChange={({ target }) => setStreet(target.value)}
             />
           </div>
           <div className="form-group-wrap">
-            <label htmlFor="">city</label>
+            <label htmlFor="city">city</label>
             <input
-              type="text"
+              id="city"
               value={city}
               placeholder="Example: New York"
               onChange={({ target }) => setCity(target.value)}
             />
           </div>
         </div>
-        <button type="submit">add</button>
+        <button type="submit">Add</button>
       </form>
     </div>
   );

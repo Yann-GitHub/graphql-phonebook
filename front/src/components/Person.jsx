@@ -3,21 +3,21 @@ import { useEffect, useState } from "react";
 const Person = ({ person, onClose }) => {
   const [animateIn, setAnimateIn] = useState(false);
 
-  // Animation d'entrée
+  // Entry animation
   useEffect(() => {
-    // Petit délai pour permettre au DOM de se mettre à jour avant l'animation
+    // Small delay to allow the CSS transition to take effect
     const timer = setTimeout(() => setAnimateIn(true), 50);
     return () => clearTimeout(timer);
   }, []);
 
-  // Fonction pour gérer la fermeture avec animation
+  // Exit animation
   const handleClose = () => {
     setAnimateIn(false);
-    // Attendre que l'animation de sortie soit terminée avant de fermer
+    // Delay the onClose callback to allow the exit animation to finish
     setTimeout(onClose, 300);
   };
 
-  // Déterminer la couleur de l'avatar en fonction du nom
+  // Default avatar color based on name
   const getAvatarColor = (name) => {
     const colors = [
       "#646cff", // Couleur principale de votre thème

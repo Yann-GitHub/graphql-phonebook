@@ -1,16 +1,27 @@
 import { Link, NavLink, useNavigate } from "react-router-dom";
 import UserIcon from "../components/icons/UserIcon.jsx";
 import UserIconOutLine from "./icons/UserIconOutLine.jsx";
-import { useAuthStore, useUserStore } from "../store/index.js";
+import {
+  useAuthStore,
+  useUserStore,
+  useNotificationStore,
+} from "../store/index.js";
 
 const Header = () => {
   const token = useAuthStore((state) => state.token);
   const logout = useAuthStore((state) => state.logout);
   const user = useUserStore((state) => state.user);
+  const addNotification = useNotificationStore(
+    (state) => state.addNotification
+  );
   const navigate = useNavigate();
 
   const handleLogout = () => {
     logout();
+    addNotification({
+      type: "success",
+      message: "You have been logged out successfully.",
+    });
     navigate("/login");
   };
 

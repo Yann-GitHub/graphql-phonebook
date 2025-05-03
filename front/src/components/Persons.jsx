@@ -3,7 +3,6 @@ import { useQuery } from "@apollo/client";
 import Person from "./Person";
 import { FIND_PERSON, ALL_PERSONS } from "../queries";
 import Loader from "./Loader";
-// import { useNotificationStore } from "../store/index.js";
 
 function Persons() {
   const [nameToSearch, setNameToSearch] = useState(null);
@@ -40,7 +39,7 @@ function Persons() {
 
   const personsList = allPersons?.allPersons || [];
 
-  // Filtrer la liste basée sur la recherche
+  // Filter the persons list based on the search query
   const filteredList = searchQuery
     ? personsList.filter(
         (p) =>
@@ -66,7 +65,7 @@ function Persons() {
     return (
       <div className="not-found-container">
         <div className="not-found-content">
-          <h3>😕 Person not found</h3>
+          <h3>Person not found</h3>
           <p>
             `We could not find anyone named ${nameToSearch} in the phonebook.`
           </p>

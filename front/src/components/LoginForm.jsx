@@ -27,7 +27,7 @@ const LoginForm = () => {
   // React Router
   const navigate = useNavigate();
 
-  // Lazy query to get current user
+  // Lazy query to get current user data after
   const [getMe] = useLazyQuery(ME, {
     onCompleted: (data) => {
       console.log("getMe onCompleted with:", data);
@@ -55,11 +55,13 @@ const LoginForm = () => {
   // Mutation to login
   const [login, { loading }] = useMutation(LOGIN, {
     onCompleted: (data) => {
-      console.log("Login successful, token received:", data.login.token);
-      const token = data.login.token;
-      setToken(token);
-      setFetchingUser(true); // Start loader for getMe
-      getMe();
+      addNotification({
+        type: "success",
+        message: "Connexion réussie !",
+      });
+      setToken(data.login.token);
+      setFetchingUser(true);
+      getMe(); // Fetch user data after login
     },
     onError: (error) => {
       console.error("Login error:", error);
@@ -83,34 +85,6 @@ const LoginForm = () => {
     return <Loader />;
   }
 
-  // return (
-  //   <div className="form-container">
-  //     <form onSubmit={submit} className="custom-form">
-  //       {/* <h2 className="form-title">Login form</h2> */}
-  //       <div className="form-main-wrap">
-  //         <div className="form-group-wrap">
-  //           <label htmlFor="">username</label>
-  //           <input
-  //             value={username}
-  //             type="text"
-  //             placeholder="Example: johndoe"
-  //             onChange={({ target }) => setUsername(target.value)}
-  //           />
-  //         </div>
-  //         <div className="form-group-wrap">
-  //           <label htmlFor="">password</label>
-  //           <input
-  //             type="password"
-  //             value={password}
-  //             placeholder="Example: ********"
-  //             onChange={({ target }) => setPassword(target.value)}
-  //           />
-  //         </div>
-  //       </div>
-  //       <button type="submit">login</button>
-  //     </form>
-  //   </div>
-  // );
   return (
     <div className="form-container">
       <form
