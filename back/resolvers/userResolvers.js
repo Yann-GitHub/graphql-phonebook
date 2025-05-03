@@ -191,7 +191,7 @@ const userResolvers = {
       const { traceId, currentUser } = context;
 
       logger.debug(
-        `[${traceId}] 🔍 Mutation 'addAsFriend' called with Username ${args.username}`
+        `[${traceId}] 🔍 Mutation 'addAsFriend' called with person ID ${args.id}`
       );
 
       // Check if the user is authenticated
@@ -201,20 +201,20 @@ const userResolvers = {
         });
       }
 
-      // Check if the name argument is provided and valid format
-      if (!args.name || typeof args.name !== "string") {
-        throw new GraphQLError("Invalid name provided", {
+      // Check if the ID argument is provided
+      if (!args.id) {
+        throw new GraphQLError("Person ID is required", {
           extensions: { code: "BAD_USER_INPUT" },
         });
       }
 
       try {
         // Check if the person exists
-        const person = await Person.findOne({ name: args.name });
+        const person = await Person.findById(args.id);
 
         if (!person) {
           throw new GraphQLError("Person not found", {
-            extensions: { code: "NOT_FOUND", invalidArgs: args.name },
+            extensions: { code: "NOT_FOUND", invalidArgs: args.id },
           });
         }
 
@@ -225,7 +225,7 @@ const userResolvers = {
 
         if (isAlreadyFriend) {
           throw new GraphQLError("Person is already a friend", {
-            extensions: { code: "BAD_USER_INPUT", invalidArgs: args.name },
+            extensions: { code: "BAD_USER_INPUT", invalidArgs: args.id },
           });
         }
 
