@@ -90,9 +90,9 @@ const LoginForm = () => {
       <form
         onSubmit={submit}
         className="custom-form"
-        style={{ marginTop: "-93.5px" }}
+        // style={{ marginTop: "-93.5px" }}
       >
-        <h2 className="form-title">Login form</h2>
+        {/* <h2 className="form-title">Login form</h2> */}
         <div className="form-main-wrap">
           <div className="form-group-wrap">
             <label htmlFor="username-input">Username</label>

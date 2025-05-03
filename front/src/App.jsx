@@ -6,6 +6,7 @@ import SharedLayout from "./pages/SharedLayout";
 import Error from "./pages/Error";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
+import { Navigate } from "react-router-dom";
 
 const App = () => {
   return (
@@ -27,6 +28,7 @@ const App = () => {
           <Route index element={<PersonsList />} />
           <Route path="newPerson" element={<NewPerson />} />
           <Route path="login" element={<Login />} />
+          <Route path="register" element={<Navigate to="/login" />} />
           <Route path="*" element={<Error />} />
         </Route>
       </Routes>
