@@ -99,3 +99,16 @@ export const ADD_FRIEND = gql`
     }
   }
 `;
+
+export const TOGGLE_FRIEND = gql`
+  mutation toggleFriendStatus($id: ID!) {
+    toggleFriendStatus(id: $id) {
+      id
+      username
+      friends {
+        id
+        name
+      }
+    }
+  }
+`;

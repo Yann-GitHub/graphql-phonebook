@@ -7,7 +7,7 @@ const logger = require("../utils/logger");
 
 const userResolvers = {
   Query: {
-    me: (root, args, context) => {
+    me: async (root, args, context) => {
       const { traceId, currentUser } = context;
 
       logger.debug(`[${traceId}] 🔍 Query 'me' called`);
@@ -19,7 +19,8 @@ const userResolvers = {
         });
       }
 
-      return context.currentUser;
+      // return context.currentUser;
+      return await User.findById(currentUser._id).populate("friends");
     },
   },
 
@@ -157,9 +158,10 @@ const userResolvers = {
         };
 
         return {
-          token: jwt.sign(userForToken, process.env.JWT_SECRET, {
-            expiresIn: "10m",
-          }),
+          // token: jwt.sign(userForToken, process.env.JWT_SECRET, {
+          //   expiresIn: "10m",
+          // }),
+          token: jwt.sign(userForToken, process.env.JWT_SECRET),
         };
       } catch (error) {
         // If the error is a GraphQLError, rethrow it
@@ -253,6 +255,111 @@ const userResolvers = {
 
         // Handle other errors
         throw new GraphQLError("Failed to add friend", {
+          extensions: {
+            code: "INTERNAL_SERVER_ERROR",
+          },
+        });
+      }
+    },
+    toggleFriendStatus: async (root, args, context) => {
+      const { traceId, currentUser } = context;
+
+      logger.debug(
+        `[${traceId}] 🔍 Mutation 'toggleFriendStatus' called with person ID ${args.id}`
+      );
+
+      // Check if the user is authenticated
+      if (!currentUser) {
+        throw new GraphQLError("Authentication required", {
+          extensions: { code: "UNAUTHENTICATED" },
+        });
+      }
+
+      // Check if the ID argument is provided
+      if (!args.id) {
+        throw new GraphQLError("Person ID is required", {
+          extensions: { code: "BAD_USER_INPUT" },
+        });
+      }
+
+      try {
+        // Check if the person exists
+        const person = await Person.findById(args.id);
+        if (!person) {
+          throw new GraphQLError("Person not found", {
+            extensions: { code: "NOT_FOUND", invalidArgs: args.id },
+          });
+        }
+
+        // Check if the person is already a friend
+        const isAlreadyFriend = currentUser.friends.some(
+          (friendId) => friendId.toString() === person._id.toString()
+        );
+        if (isAlreadyFriend) {
+          // Remove the person from the user's friends list
+          currentUser.friends = currentUser.friends.filter(
+            (friendId) => friendId.toString() !== person._id.toString()
+          );
+        } else {
+          // Add the person to the user's friends list
+          currentUser.friends = currentUser.friends.concat(person._id);
+        }
+        await currentUser.save();
+        // Return the updated user object with populated friends
+        // return await currentUser.populate("friends");
+        return await User.findById(currentUser._id).populate("friends");
+
+        // Vérifier si la personne est déjà un ami avec une méthode plus robuste
+        // Convertir tous les IDs en strings pour la comparaison
+        // const friendIds = currentUser.friends.map((id) => id.toString());
+        // const personId = person._id.toString();
+
+        // Log pour débogage
+        // console.log("Current friends:", friendIds);
+        // console.log("Person to toggle:", personId);
+        // console.log("Is already friend?", friendIds.includes(personId));
+
+        // if (friendIds.includes(personId)) {
+        // La personne est déjà un ami, la supprimer
+        // logger.debug(
+        //   `[${traceId}] Removing friend ${person.name} (${personId})`
+        // );
+
+        // currentUser.friends = currentUser.friends.filter(
+        //   (id) => id.toString() !== personId
+        // );
+        // } else {
+        // La personne n'est pas un ami, l'ajouter
+        // logger.debug(
+        //   `[${traceId}] Adding friend ${person.name} (${personId})`
+        // );
+
+        //   currentUser.friends.push(person._id);
+        // }
+
+        // Sauvegarder les modifications
+        // await currentUser.save();
+
+        // Retourner l'utilisateur mis à jour avec les amis populés
+        // return await User.findById(currentUser._id).populate("friends");
+      } catch (error) {
+        // If the error is a GraphQLError, rethrow it
+        if (error instanceof GraphQLError) {
+          throw error;
+        }
+
+        // Handle Mongoose validation errors
+        if (error.name === "ValidationError") {
+          throw new GraphQLError("Validation error", {
+            extensions: {
+              code: "BAD_USER_INPUT",
+              errorDetails: error.errors,
+            },
+          });
+        }
+
+        // Handle other errors
+        throw new GraphQLError("Failed to toggle friend status", {
           extensions: {
             code: "INTERNAL_SERVER_ERROR",
           },

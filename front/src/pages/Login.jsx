@@ -7,7 +7,7 @@ const Login = () => {
 
   return (
     <div className="login-page">
-      <h2>{showRegister ? "Register" : "Login"}</h2>
+      {/* <h2>{showRegister ? "Register" : "Login"}</h2> */}
       {/* <div className="login-page">
         <LoginForm />
       </div> */}

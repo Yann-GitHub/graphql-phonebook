@@ -42,11 +42,14 @@ const errorLink = onError(({ graphQLErrors, networkError }) => {
         // Check if the token is expired or invalid
         console.log("Token expired or invalid, logging out...");
 
-        useAuthStore.getState().logout();
-        useNotificationStore.getState().addNotification({
-          type: "error",
-          message: "Your session has expired. Please log in again.",
-        });
+        // Use SetTimeout to ensure the logout action is executed after the current event loop
+        setTimeout(() => {
+          useAuthStore.getState().logout();
+          useNotificationStore.getState().addNotification({
+            type: "error",
+            message: "Your session has expired. Please log in again.",
+          });
+        }, 0);
 
         // Redirection optionnelle
       } else {

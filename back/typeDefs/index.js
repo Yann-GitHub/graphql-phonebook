@@ -60,6 +60,10 @@ const typeDefs = `
     addAsFriend(
       id: ID!
     ): User
+
+    toggleFriendStatus(
+      id: ID!
+    ): User
   }
 `;
 

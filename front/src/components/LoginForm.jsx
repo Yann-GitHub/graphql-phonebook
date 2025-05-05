@@ -31,10 +31,16 @@ const LoginForm = () => {
   const [getMe] = useLazyQuery(ME, {
     onCompleted: (data) => {
       console.log("getMe onCompleted with:", data);
+      // Update user state in store
+      // setUser({
+      //   id: data.me.id,
+      //   username: data.me.username,
+      //   friends: data.me.friends,
+      //   profilePicture:
+      //     data.me.profilePicture || "https://thispersondoesnotexist.com/",
+      // });
       setUser({
-        id: data.me.id,
-        username: data.me.username,
-        friends: data.me.friends,
+        ...data.me,
         profilePicture:
           data.me.profilePicture || "https://thispersondoesnotexist.com/",
       });
@@ -87,12 +93,8 @@ const LoginForm = () => {
 
   return (
     <div className="form-container">
-      <form
-        onSubmit={submit}
-        className="custom-form"
-        // style={{ marginTop: "-93.5px" }}
-      >
-        {/* <h2 className="form-title">Login form</h2> */}
+      <form onSubmit={submit} className="custom-form">
+        <h2 className="form-title">Login form</h2>
         <div className="form-main-wrap">
           <div className="form-group-wrap">
             <label htmlFor="username-input">Username</label>

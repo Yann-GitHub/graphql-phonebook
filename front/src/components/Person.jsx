@@ -1,43 +1,90 @@
 import { useEffect, useState } from "react";
 import { useMutation } from "@apollo/client";
-import { ADD_FRIEND, ME, ALL_PERSONS } from "../queries";
+import { ME, ALL_PERSONS, TOGGLE_FRIEND } from "../queries";
 import { useNotificationStore } from "../store/index.js";
 import { useUserStore } from "../store/index.js";
 
 const Person = ({ person, onClose, isFriend }) => {
   const [animateIn, setAnimateIn] = useState(false);
   const [isFriendState, setIsFriendState] = useState(isFriend);
+  // const [isProcessing, setIsProcessing] = useState(false);
 
-  const user = useUserStore((state) => state.user);
+  // const user = useUserStore((state) => state.user);
   const setUser = useUserStore((state) => state.setUser);
   const addNotification = useNotificationStore(
     (state) => state.addNotification
   );
 
   // Mutation to add a friend
-  const [addFriend, { loading: addingFriend }] = useMutation(ADD_FRIEND, {
-    variables: { id: person.id },
-    refetchQueries: [{ query: ME }, { query: ALL_PERSONS }],
-    onCompleted: () => {
-      setIsFriendState(true);
-      const updatedUser = {
-        ...user,
-        friends: [...(user.friends || []), person],
-      };
-      setUser(updatedUser);
-      addNotification({
-        type: "success",
-        message: `${person.name} added to your friends!`,
-      });
-    },
-    onError: (error) => {
-      console.error("Error adding friend:", error);
-      addNotification({
-        type: "error",
-        message: error.graphQLErrors[0]?.message || "Could not add friend",
-      });
-    },
-  });
+  // const [addFriend, { loading: addingFriend }] = useMutation(ADD_FRIEND, {
+  //   variables: { id: person.id },
+  //   refetchQueries: [{ query: ME }, { query: ALL_PERSONS }],
+  //   onCompleted: () => {
+  //     setIsFriendState(true);
+  //     const updatedUser = {
+  //       ...user,
+  //       friends: [...(user.friends || []), person],
+  //     };
+  //     setUser(updatedUser);
+  //     addNotification({
+  //       type: "success",
+  //       message: `${person.name} added to your friends!`,
+  //     });
+  //   },
+  //   onError: (error) => {
+  //     console.error("Error adding friend:", error);
+  //     addNotification({
+  //       type: "error",
+  //       message: error.graphQLErrors[0]?.message || "Could not add friend",
+  //     });
+  //   },
+  // });
+
+  // Mutation to toggle friend status
+  const [toggleFriendStatus, { loading: processingFriend }] = useMutation(
+    TOGGLE_FRIEND,
+    {
+      variables: { id: person.id },
+      refetchQueries: [{ query: ME }, { query: ALL_PERSONS }],
+      onCompleted: (data) => {
+        // Check if the person is now in the friends list
+        const isFriendNow = data.toggleFriendStatus.friends.some(
+          (friend) => friend.id === person.id
+        );
+
+        setIsFriendState(isFriendNow);
+
+        // Set user data in store
+        setUser({
+          ...data.toggleFriendStatus,
+          profilePicture:
+            data.toggleFriendStatus.profilePicture ||
+            "https://thispersondoesnotexist.com/",
+        });
+        // const updatedUser = {
+        //   ...user,
+        //   friends: [...(user.friends || []), person],
+        // };
+        // setUser(updatedUser);
+
+        // Show appropriate notification
+        addNotification({
+          type: "success",
+          message: isFriendNow
+            ? `${person.name} added to your favorites!`
+            : `${person.name} removed from your favorites!`,
+        });
+      },
+      onError: (error) => {
+        console.error("Error toggling friend status:", error);
+        addNotification({
+          type: "error",
+          message:
+            error.graphQLErrors[0]?.message || "Could not change friend status",
+        });
+      },
+    }
+  );
 
   // Entry animation
   useEffect(() => {
@@ -106,10 +153,71 @@ const Person = ({ person, onClose, isFriend }) => {
             </div>
           </div>
 
-          <div className="detail-item">
+          {/* <div className="detail-item">
             <span className="detail-icon">👫</span>
             <span className="detail-label">Is friend:</span>
             <span className="detail-value">{isFriendState ? "Yes" : "No"}</span>
+          </div> */}
+          {/* <div className="detail-item">
+            <span className="detail-icon">👫</span>
+            <span className="detail-label">Friend:</span>
+            <div className="detail-value toggle-container">
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={isFriendState}
+                  onChange={toggleFriendStatus}
+                  disabled={isLoading}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+              <span className="toggle-label">
+                {isLoading
+                  ? isFriendState
+                    ? "Removing..."
+                    : "Adding..."
+                  : isFriendState
+                  ? "Yes"
+                  : "No"}
+              </span>
+            </div>
+          </div> */}
+          {/* <div className="detail-item">
+            <button
+              className={`action-button ${
+                isFriendState ? "remove-friend-button" : "add-friend-button"
+              }`}
+              onClick={toggleFriendStatus}
+              disabled={processingFriend}
+            >
+              {processingFriend
+                ? "Processing..."
+                : isFriendState
+                ? "❌ Remove friend"
+                : "➕ Add friend"}
+            </button>
+          </div> */}
+          <div className="detail-item">
+            <span className="detail-icon">👤</span>
+            <span className="detail-label">Favorite:</span>
+            <div className="detail-value toggle-container">
+              <label className="toggle-switch">
+                <input
+                  type="checkbox"
+                  checked={isFriendState}
+                  onChange={toggleFriendStatus}
+                  disabled={processingFriend}
+                />
+                <span className="toggle-slider"></span>
+              </label>
+              {/* <span className="toggle-label">
+                {processingFriend
+                  ? "Processing..."
+                  : isFriendState
+                  ? "In contacts"
+                  : "Add to contacts"}
+              </span> */}
+            </div>
           </div>
         </div>
 
@@ -120,7 +228,7 @@ const Person = ({ person, onClose, isFriend }) => {
           >
             📞 Call
           </button>
-          {!isFriendState && (
+          {/* {!isFriendState && (
             <button
               className="action-button add-friend-button"
               onClick={addFriend}
@@ -128,7 +236,7 @@ const Person = ({ person, onClose, isFriend }) => {
             >
               {addingFriend ? "Adding..." : "➕ Add friend"}
             </button>
-          )}
+          )} */}
           <button className="action-button edit-button">✏️ Edit</button>
           <button className="action-button close-button" onClick={handleClose}>
             Close
