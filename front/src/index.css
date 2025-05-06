@@ -437,7 +437,7 @@ a.login-button {
 }
 
 .search-container {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.5rem;
   position: relative;
   width: 100%;
 }
@@ -909,6 +909,30 @@ input:checked + .toggle-slider:before {
 .toggle-label {
   font-size: 0.9rem;
   min-width: 100px;
+}
+
+/* Ajouter au fichier index.css */
+.filter-container {
+  display: flex;
+  align-items: center;
+  justify-content: right;
+  /* margin-top: 10px; */
+  margin-bottom: 1rem;
+  padding: 8px;
+  border-radius: 8px;
+  background-color: #f8f8f8;
+  border: 1px solid #ddd;
+}
+
+.filter-container .toggle-switch {
+  margin-right: 10px;
+}
+
+.filter-container .toggle-label {
+  display: inline-block;
+  font-size: 0.9rem;
+  color: #666;
+  padding-right: 10px;
 }
 
 /* * {
