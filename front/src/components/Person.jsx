@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useMutation } from "@apollo/client";
-import { ME, ALL_PERSONS, TOGGLE_FRIEND } from "../queries";
+import { ME, ALL_PERSONS, TOGGLE_FRIEND, EDIT_NUMBER } from "../queries";
 import { useNotificationStore } from "../store/index.js";
 import { useUserStore } from "../store/index.js";
 import { getAvatarColor } from "../utils/colorUtils.js";
@@ -8,6 +8,9 @@ import { getAvatarColor } from "../utils/colorUtils.js";
 const Person = ({ person, onClose, isFriend }) => {
   const [animateIn, setAnimateIn] = useState(false);
   const [isFriendState, setIsFriendState] = useState(isFriend);
+
+  const [editMode, setEditMode] = useState(false);
+  const [phoneValue, setPhoneValue] = useState(person.phone || "");
 
   const setUser = useUserStore((state) => state.setUser);
   const addNotification = useNotificationStore(
@@ -55,6 +58,30 @@ const Person = ({ person, onClose, isFriend }) => {
     }
   );
 
+  const [updatePhoneNumber, { loading: updatingPhone }] = useMutation(
+    EDIT_NUMBER,
+    {
+      onCompleted: (data) => {
+        console.log("Phone number updated:", data);
+        addNotification({
+          type: "success",
+          message: `Phone number updated for ${data.editNumber.name}!`,
+        });
+      },
+      onError: (error) => {
+        console.error("Error updating phone number:", error);
+        addNotification({
+          type: "error",
+          message:
+            error.graphQLErrors[0]?.message || "Could not update phone number",
+        });
+        // Revenir à l'ancienne valeur en cas d'erreur
+        setPhoneValue(person.phone || "");
+      },
+      refetchQueries: [{ query: ALL_PERSONS }],
+    }
+  );
+
   // Entry animation
   useEffect(() => {
     // Small delay to allow the CSS transition to take effect
@@ -74,6 +101,16 @@ const Person = ({ person, onClose, isFriend }) => {
     setTimeout(onClose, 300);
   };
 
+  const handleEditToggle = () => {
+    if (editMode) {
+      // Si on quitte le mode édition, soumettre les changements
+      if (phoneValue !== person.phone) {
+        updatePhoneNumber({ variables: { id: person.id, phone: phoneValue } });
+      }
+    }
+    setEditMode(!editMode);
+  };
+
   return (
     <div className={`person-details-overlay ${animateIn ? "visible" : ""}`}>
       <div className="person-details-backdrop" onClick={handleClose}></div>
@@ -88,12 +125,55 @@ const Person = ({ person, onClose, isFriend }) => {
         <h2 className="person-details-name">{person.name}</h2>
 
         <div className="person-details-section">
-          <div className="detail-item">
+          {/* <div className="detail-item">
             <span className="detail-icon">📱</span>
             <span className="detail-label">Phone:</span>
             <span className="detail-value">
               {person.phone || "No phone number"}
             </span>
+          </div> */}
+          <div className="detail-item">
+            <span className="detail-icon">📱</span>
+            <span className="detail-label">Phone:</span>
+            {editMode ? (
+              <div className="detail-value edit-mode">
+                <input
+                  type="text"
+                  value={phoneValue}
+                  onChange={(e) => setPhoneValue(e.target.value)}
+                  placeholder="Enter phone number"
+                  className="phone-edit-input"
+                  autoFocus
+                />
+                <div className="edit-actions">
+                  <button
+                    onClick={() => {
+                      updatePhoneNumber({
+                        variables: { id: person.id, phone: phoneValue },
+                      });
+                      setEditMode(false);
+                    }}
+                    disabled={updatingPhone}
+                    className="save-btn"
+                  >
+                    {updatingPhone ? "Saving..." : "Save"}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setPhoneValue(person.phone || "");
+                      setEditMode(false);
+                    }}
+                    className="cancel-btn"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <span className="detail-value">
+                {person.phone || "No phone number"}
+              </span>
+            )}
           </div>
 
           <div className="detail-item">
@@ -129,7 +209,16 @@ const Person = ({ person, onClose, isFriend }) => {
           >
             📞 Call
           </button>
-          <button className="action-button edit-button">✏️ Edit</button>
+          {/* <button className="action-button edit-button">✏️ Edit</button> */}
+          <button
+            className={`action-button ${
+              editMode ? "save-button" : "edit-button"
+            }`}
+            onClick={handleEditToggle}
+            disabled={updatingPhone}
+          >
+            {editMode ? "✓ Done" : "✏️ Edit"}
+          </button>
           <button className="action-button close-button" onClick={handleClose}>
             Close
           </button>

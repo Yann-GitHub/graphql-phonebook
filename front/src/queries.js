@@ -44,8 +44,8 @@ export const FIND_PERSON = gql`
 `;
 
 export const EDIT_NUMBER = gql`
-  mutation editNumber($name: String!, $phone: String!) {
-    editNumber(name: $name, phone: $phone) {
+  mutation editNumber($id: ID!, $phone: String!) {
+    editNumber(id: $id, phone: $phone) {
       name
       phone
       address {

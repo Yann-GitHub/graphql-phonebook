@@ -215,15 +215,11 @@ const personResolvers = {
       }
 
       // Check if the name and phone arguments are provided and valid
-      if (
-        !args.name ||
-        typeof args.name !== "string" ||
-        args.name.trim() === ""
-      ) {
+      if (!args.id) {
         throw new GraphQLError(
-          "Invalid or missing 'name'. It must be a non-empty string.",
+          "Invalid or missing 'id'. It must be a valid ID.",
           {
-            extensions: { code: "BAD_USER_INPUT", invalidArgs: "name" },
+            extensions: { code: "BAD_USER_INPUT", invalidArgs: "id" },
           }
         );
       }
@@ -243,7 +239,7 @@ const personResolvers = {
 
       try {
         // Search for the person by name
-        const person = await Person.findOne({ name: args.name });
+        const person = await Person.findById(args.id);
 
         // Set error if person is not found
         if (!person) {

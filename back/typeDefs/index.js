@@ -43,7 +43,7 @@ const typeDefs = `
     ): Person
 
     editNumber(
-      name: String!
+      id: ID!
       phone: String!
     ): Person
 
