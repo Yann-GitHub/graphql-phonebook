@@ -1,13 +1,50 @@
 import { gql } from "@apollo/client";
 
+// Fragment
+export const PERSON_BASIC_DETAILS = gql`
+  fragment PersonBasicDetails on Person {
+    name
+    phone
+    id
+  }
+`;
+
+export const PERSON_FULL_DETAILS = gql`
+  fragment PersonFullDetails on Person {
+    ...PersonBasicDetails
+    address {
+      street
+      city
+    }
+  }
+  ${PERSON_BASIC_DETAILS}
+`;
+
+export const USER_BASIC_DETAILS = gql`
+  fragment UserBasicDetails on User {
+    username
+    id
+  }
+`;
+
+export const USER_FULL_DETAILS = gql`
+  fragment UserFullDetails on User {
+    ...UserBasicDetails
+    friends {
+      ...PersonBasicDetails
+    }
+  }
+  ${USER_BASIC_DETAILS}
+  ${PERSON_BASIC_DETAILS}
+`;
+
 export const ALL_PERSONS = gql`
   query GetAllPersons {
     allPersons {
-      name
-      phone
-      id
+      ...PersonBasicDetails
     }
   }
+  ${PERSON_BASIC_DETAILS}
 `;
 
 export const CREATE_PERSON = gql`
@@ -18,43 +55,28 @@ export const CREATE_PERSON = gql`
     $phone: String
   ) {
     addPerson(name: $name, street: $street, city: $city, phone: $phone) {
-      name
-      phone
-      id
-      address {
-        street
-        city
-      }
+      ...PersonFullDetails
     }
   }
+  ${PERSON_FULL_DETAILS}
 `;
 
 export const FIND_PERSON = gql`
   query FindPersonByName($nameToSearch: String!) {
     findPerson(name: $nameToSearch) {
-      name
-      phone
-      id
-      address {
-        street
-        city
-      }
+      ...PersonFullDetails
     }
   }
+  ${PERSON_FULL_DETAILS}
 `;
 
 export const EDIT_NUMBER = gql`
   mutation EditNumber($id: ID!, $phone: String!) {
     editNumber(id: $id, phone: $phone) {
-      name
-      phone
-      address {
-        street
-        city
-      }
-      id
+      ...PersonFullDetails
     }
   }
+  ${PERSON_FULL_DETAILS}
 `;
 
 export const LOGIN = gql`
@@ -68,47 +90,35 @@ export const LOGIN = gql`
 export const ME = gql`
   query GetCurrentUser {
     me {
-      username
-      id
-      friends {
-        id
-        name
-      }
+      ...UserFullDetails
     }
   }
+  ${USER_FULL_DETAILS}
 `;
 
 export const CREATE_USER = gql`
   mutation RegisterNewUser($username: String!, $password: String!) {
     createUser(username: $username, password: $password) {
-      id
-      username
+      ...UserBasicDetails
     }
   }
+  ${USER_BASIC_DETAILS}
 `;
 
 export const ADD_FRIEND = gql`
   mutation AddAsFriend($id: ID!) {
     addAsFriend(id: $id) {
-      id
-      username
-      friends {
-        id
-        name
-      }
+      ...UserFullDetails
     }
   }
+  ${USER_FULL_DETAILS}
 `;
 
 export const TOGGLE_FRIEND = gql`
   mutation ToggleFriendStatus($id: ID!) {
     toggleFriendStatus(id: $id) {
-      id
-      username
-      friends {
-        id
-        name
-      }
+      ...UserFullDetails
     }
   }
+  ${USER_FULL_DETAILS}
 `;
