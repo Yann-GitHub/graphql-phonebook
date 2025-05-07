@@ -8,7 +8,7 @@ const loggingPlugin = {
 
     // Log the start of the request
     logger.info(
-      `[${traceId}] ➡️ Request started: ${
+      `[${traceId}] Request started: ${
         requestContext.request.operationName || "Unnamed"
       }`
     );
@@ -17,7 +17,7 @@ const loggingPlugin = {
     return {
       async didEncounterErrors(ctx) {
         for (const err of ctx.errors) {
-          logger.error(`[${traceId}] ❌ GraphQL Error: ${err.message}`, {
+          logger.error(`[${traceId}] GraphQL Error: ${err.message}`, {
             path: err.path,
             stack: err.stack,
             variables: ctx.request.variables,
@@ -26,7 +26,7 @@ const loggingPlugin = {
       },
 
       async willSendResponse(ctx) {
-        logger.info(`[${traceId}] ✅ Response sent`);
+        logger.info(`[${traceId}] Response sent`);
       },
 
       // Optional: Make traceId available in context for resolvers

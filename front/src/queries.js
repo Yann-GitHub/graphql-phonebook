@@ -1,7 +1,7 @@
 import { gql } from "@apollo/client";
 
 export const ALL_PERSONS = gql`
-  query {
+  query GetAllPersons {
     allPersons {
       name
       phone
@@ -11,7 +11,7 @@ export const ALL_PERSONS = gql`
 `;
 
 export const CREATE_PERSON = gql`
-  mutation createPerson(
+  mutation CreatePerson(
     $name: String!
     $street: String!
     $city: String!
@@ -30,7 +30,7 @@ export const CREATE_PERSON = gql`
 `;
 
 export const FIND_PERSON = gql`
-  query findPersonByName($nameToSearch: String!) {
+  query FindPersonByName($nameToSearch: String!) {
     findPerson(name: $nameToSearch) {
       name
       phone
@@ -44,7 +44,7 @@ export const FIND_PERSON = gql`
 `;
 
 export const EDIT_NUMBER = gql`
-  mutation editNumber($id: ID!, $phone: String!) {
+  mutation EditNumber($id: ID!, $phone: String!) {
     editNumber(id: $id, phone: $phone) {
       name
       phone
@@ -58,7 +58,7 @@ export const EDIT_NUMBER = gql`
 `;
 
 export const LOGIN = gql`
-  mutation login($username: String!, $password: String!) {
+  mutation UserLogin($username: String!, $password: String!) {
     login(username: $username, password: $password) {
       token
     }
@@ -66,7 +66,7 @@ export const LOGIN = gql`
 `;
 
 export const ME = gql`
-  query {
+  query GetCurrentUser {
     me {
       username
       id
@@ -79,7 +79,7 @@ export const ME = gql`
 `;
 
 export const CREATE_USER = gql`
-  mutation createUser($username: String!, $password: String!) {
+  mutation RegisterNewUser($username: String!, $password: String!) {
     createUser(username: $username, password: $password) {
       id
       username
@@ -88,7 +88,7 @@ export const CREATE_USER = gql`
 `;
 
 export const ADD_FRIEND = gql`
-  mutation addAsFriend($id: ID!) {
+  mutation AddAsFriend($id: ID!) {
     addAsFriend(id: $id) {
       id
       username
@@ -101,7 +101,7 @@ export const ADD_FRIEND = gql`
 `;
 
 export const TOGGLE_FRIEND = gql`
-  mutation toggleFriendStatus($id: ID!) {
+  mutation ToggleFriendStatus($id: ID!) {
     toggleFriendStatus(id: $id) {
       id
       username
