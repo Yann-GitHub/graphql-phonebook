@@ -41,7 +41,7 @@ A full-stack address book application built with React, Apollo Client, GraphQL, 
 1. Clone the repository
 
 ```bash
-git clone https://github.com/yourusername/graphql-phonebook.git
+git clone https://github.com/Yann-GitHub/graphql-phonebook.git
 cd graphql-phonebook
 ```
 
