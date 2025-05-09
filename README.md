@@ -133,7 +133,5 @@ graphql-phonebook/
 - Add dark mode theme
 - Enable import/export of contacts
 - Implement real-time updates with GraphQL subscriptions
-
-## License
-
-This project is licensed under the MIT License - see the LICENSE file for details.
+- Implement dataloader for optimized data fetching
+- Redis caching for improved performance
